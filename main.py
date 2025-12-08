@@ -6,6 +6,8 @@ import json
 
 app = FastAPI()
 
+
+
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
@@ -13,6 +15,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.post("/upload-cache")
+def upload_cache(data: dict):
+    titles = data["titles"]
+    contents = data["contents"]
+    courses = data["courses"]
+
+    save_cache(titles, contents, courses)
+
+    return {"status": "ok", "message": "캐시 업로드 완료"}
 
 @app.get("/notices")
 def get_notices():
@@ -35,3 +47,4 @@ def refresh_cache():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000)
+
