@@ -6,6 +6,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 import json
+from crolling import crawl_notices
+
 
 
 # ======================================
@@ -43,6 +45,7 @@ def verify_user(username: str, password: str):
 # FastAPI 시작
 # ======================================
 app = FastAPI()
+user_data = {}
 
 # CORS 허용 (프론트엔드에서 호출할 수 있게)
 app.add_middleware(
@@ -84,14 +87,47 @@ def refresh_cache(user=Depends(verify_token)):
     return {"status": "ok", "message": "캐시가 새로고침되었습니다."}
 
 
-# ======================================
-# 🔐 공지 조회 API (로그인 필요)
-# ======================================
+
+# CORS 허용 (프론트엔드에서 호출할 수 있게)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+        
+   
+@app.post("/login")
+def login(username: str = Form(...), password: str = Form(...)):
+    # 아이디/비밀번호 실제 검증 → selenium으로 로그인 시도
+    try:
+        titles, contents = crawl_notices(username, password)
+    except:
+        raise HTTPException(status_code=401, detail="로그인 실패")
+
+    # 로그인 성공 → 서버 메모리에 저장
+    user_data[username] = {
+        "titles": titles,
+        "contents": contents
+    }
+
+    # JWT 발급
+    token = create_access_token({"sub": username})
+    return {"access_token": token, "token_type": "bearer"}
+
 @app.get("/notices")
 def get_notices(user=Depends(verify_token)):
-    titles = load_titles_cached()
-    contents = load_contents_cached()
-    return {"titles": titles, "contents": contents}
+    username = user["sub"]
+
+    if username not in user_data:
+        raise HTTPException(401, "로그인 정보가 없습니다")
+
+    return {
+        "titles": user_data[username]["titles"],
+        "contents": user_data[username]["contents"]
+    }
+
+
 
 
 # ======================================
