@@ -12,22 +12,20 @@ class LoginData(BaseModel):
     password: str
 
 @app.post("/login")
-def login(data: LoginData):
+def login(req: LoginRequest):
+    username = req.username
+    password = req.password
+
     try:
-        # 실제 크롤링 실행 → titles, contents, course_titles 반환
-        titles, contents, course_titles = crawl_all_notices(
-            data.username,
-            data.password
-        )
+        notices, contents, course_titles = crawl_all_notices(username, password)
 
-        # cache.json 파일 저장
-        save_cache(titles, contents, course_titles)
+        save_cache(notices, contents, course_titles)
 
-        return {"status": "success"}
+        return {"status": "ok"}
 
     except Exception as e:
-        print(e)
-        raise HTTPException(400, "로그인 실패 또는 크롤링 오류")
+        print("로그인 실패:", e)
+        raise HTTPException(status_code=401, detail="로그인 실패")
 
 
 titles = load_titles_cached()
@@ -78,4 +76,5 @@ def summarize_api(data: dict):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000)
+
 
