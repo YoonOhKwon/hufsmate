@@ -4,3 +4,7 @@ openai
 requests
 beautifulsoup4
 selenium
+python-multipart
+pydantic
+python-dotenv
+webdriver-manager
