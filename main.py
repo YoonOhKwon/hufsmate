@@ -6,6 +6,9 @@ import json
 from pydantic import BaseModel
 from crolling import crawl_all_notices
 
+
+app = FastAPI()
+
 class LoginRequest(BaseModel):
     username: str
     password: str
@@ -30,7 +33,6 @@ def login(req: LoginRequest):
 
 titles = load_titles_cached()
 contents = load_contents_cached()
-app = FastAPI()
 
 @app.post("/refresh-cache")
 def refresh_cache():
@@ -71,6 +73,7 @@ def summarize_api(data: dict):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000)
+
 
 
 
