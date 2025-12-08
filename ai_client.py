@@ -1,9 +1,11 @@
+import os
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-1cd4b46b47d843bebde7bae0c2c39f90",
+    api_key=os.getenv("OPENAI_API_KEY"),
     base_url="https://api.deepseek.com/v1"
 )
+
 
 def ai_summarize(prompt : str, text: str) -> str:
     
