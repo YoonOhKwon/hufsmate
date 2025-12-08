@@ -7,9 +7,10 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-class LoginData(BaseModel):
+class LoginRequest(BaseModel):
     username: str
     password: str
+
 
 @app.post("/login")
 def login(req: LoginRequest):
@@ -76,5 +77,6 @@ def summarize_api(data: dict):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000)
+
 
 
