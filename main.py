@@ -4,8 +4,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import json
 from pydantic import BaseModel
-
-app = FastAPI()
+from crolling import crawl_all_notices
 
 class LoginRequest(BaseModel):
     username: str
@@ -35,18 +34,13 @@ app = FastAPI()
 
 @app.post("/refresh-cache")
 def refresh_cache():
-    from crolling import get_notice_titles, get_notice_contents
-    titles = get_notice_titles()
-    contents = get_notice_contents()
+    from crolling import crawl_all_notices
 
-    # 저장
-    with open("cache_titles.json", "w", encoding="utf-8") as f:
-        json.dump(titles, f, ensure_ascii=False, indent=2)
+    # 기존 캐시에 저장된 로그인 정보가 없음 → 새로 크롤링 불가
+    # 여기서는 단순하게 캐시만 삭제하는 방향으로 구현하거나
+    # 로그인 정보를 세션 저장 방식으로 바꿔야 함 (확장 가능)
 
-    with open("cache_contents.json", "w", encoding="utf-8") as f:
-        json.dump(contents, f, ensure_ascii=False, indent=2)
-
-    return {"status": "ok", "message": "캐시가 새로고침되었습니다."}
+    return {"status": "error", "message": "로그인 기반 새로고침은 아직 미지원"}
 
 
 
@@ -77,6 +71,7 @@ def summarize_api(data: dict):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000)
+
 
 
 
