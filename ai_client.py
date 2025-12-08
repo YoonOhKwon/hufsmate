@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
 
-API_KEY = os.getenv("OPENAI_API_KEY")
+API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
 client = OpenAI(
     api_key=API_KEY,
@@ -34,5 +34,6 @@ def ai_summarize(prompt : str, text: str) -> str:
         ]
     )
     return response.choices[0].message.content
+
 
 
