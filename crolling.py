@@ -135,4 +135,8 @@ def get_notice_titles():
 
 def get_notice_contents():
     return notice_content_list
+
+def get_course_titles():
+    return course_titles
+
  
