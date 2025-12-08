@@ -22,7 +22,14 @@ def crawl_all_notices(user_id, user_pw):
 
     wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "em.sub_open")))
     courses = driver.find_elements(By.CSS_SELECTOR, "em.sub_open")
-    course_titles = [c.get_attribute("title").replace("강의실 들어가기", "") for c in courses]
+    
+    course_titles = [
+        c.get_attribute("title")
+         .replace("강의실 들어가기", "")
+         .replace("  ", " ")
+         .strip()
+        for c in courses
+    ]
 
     notice_titles = []
     notice_contents = []
@@ -76,4 +83,5 @@ def crawl_all_notices(user_id, user_pw):
         json.dump(notice_contents, f, ensure_ascii=False, indent=2)
 
     return notice_titles, notice_contents, course_titles
+
 
