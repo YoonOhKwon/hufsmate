@@ -1,8 +1,34 @@
-from cache import load_titles_cached, load_contents_cached
+from cache import load_titles_cached, load_contents_cached,save_cache
 from ai_client import ai_summarize
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import json
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class LoginData(BaseModel):
+    username: str
+    password: str
+
+@app.post("/login")
+def login(data: LoginData):
+    try:
+        # 실제 크롤링 실행 → titles, contents, course_titles 반환
+        titles, contents, course_titles = crawl_all_notices(
+            data.username,
+            data.password
+        )
+
+        # cache.json 파일 저장
+        save_cache(titles, contents, course_titles)
+
+        return {"status": "success"}
+
+    except Exception as e:
+        print(e)
+        raise HTTPException(400, "로그인 실패 또는 크롤링 오류")
+
 
 titles = load_titles_cached()
 contents = load_contents_cached()
@@ -52,3 +78,4 @@ def summarize_api(data: dict):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000)
+
