@@ -52,17 +52,3 @@ def summarize_api(data: dict):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000)
-
-
-# for class_i, class_titles in enumerate(titles, start=1):
-#     print(f"\n===== 강의 {class_i} =====")
-
-#     for idx, title in enumerate(class_titles):
-#         print(f"\n{idx+1}. 제목: {title}")
-
-#         # 내용을 불러왔다면
-#         if contents:
-#             print("   내용:", contents[class_i-1][idx])
-#             print("   요약:", summarize(contents[class_i-1][idx]))
-            
-            
