@@ -1,7 +1,10 @@
 from openai import OpenAI
+import os
+
+API_KEY = os.getenv("API_KEY")
 
 client = OpenAI(
-    api_key="sk-1cd4b46b47d843bebde7bae0c2c39f90",
+    api_key=API_KEY,
     base_url="https://api.deepseek.com/v1"
 )
 
