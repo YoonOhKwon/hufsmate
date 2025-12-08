@@ -1,6 +1,16 @@
 import json
 import os
 
+def save_cache(titles, contents, course_titles):
+    with open("cache_titles.json", "w", encoding="utf-8") as f:
+        json.dump(titles, f, ensure_ascii=False, indent=2)
+
+    with open("cache_contents.json", "w", encoding="utf-8") as f:
+        json.dump(contents, f, ensure_ascii=False, indent=2)
+
+    with open("cache_course_titles.json", "w", encoding="utf-8") as f:
+        json.dump(course_titles, f, ensure_ascii=False, indent=2)
+        
 def load_titles_cached():
     # 캐시 파일 있으면 바로 로드
     if os.path.exists("cache_titles.json"):
@@ -40,3 +50,4 @@ def load_course_titles_cached():
     with open("cache_course_titles.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     return data
+
