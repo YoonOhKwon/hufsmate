@@ -51,7 +51,7 @@ def summarize_api(data: dict):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main2:app", host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
 
 
 # for class_i, class_titles in enumerate(titles, start=1):
