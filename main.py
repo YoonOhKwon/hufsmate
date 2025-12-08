@@ -3,6 +3,8 @@ from ai_client import ai_summarize
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import json
+from fastapi.responses import FileResponse
+
 
 app = FastAPI()
 
@@ -13,6 +15,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/download/uploader")
+def download_uploader():
+    file_path = "hufsmate_uploader.exe"
+    return FileResponse(
+        path=file_path,
+        filename="hufsmate_uploader.exe",
+        media_type="application/octet-stream"
+    )
+
 
 # -------------------------
 # 1) 로컬 크롤링 JSON → 서버로 업로드
@@ -69,3 +82,4 @@ def refresh_cache():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000)
+
