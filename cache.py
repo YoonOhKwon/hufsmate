@@ -28,4 +28,15 @@ def load_contents_cached():
     with open("cache_contents.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     return data
-    
+
+def load_course_titles_cached():
+    if os.path.exists("cache_course_titles.json"):
+        with open("cache_course_titles.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    # 캐시 없으면 크롤링 후 생성
+    from crolling import get_course_titles
+    data = get_course_titles()
+    with open("cache_course_titles.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    return data
