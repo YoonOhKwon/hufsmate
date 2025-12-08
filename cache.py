@@ -1,6 +1,10 @@
 import json
 import os
 
+
+# ---------------------------
+# 캐시 저장 함수
+# ---------------------------
 def save_cache(titles, contents, course_titles):
     with open("cache_titles.json", "w", encoding="utf-8") as f:
         json.dump(titles, f, ensure_ascii=False, indent=2)
@@ -10,44 +14,27 @@ def save_cache(titles, contents, course_titles):
 
     with open("cache_course_titles.json", "w", encoding="utf-8") as f:
         json.dump(course_titles, f, ensure_ascii=False, indent=2)
-        
+
+
+# ---------------------------
+# 캐시 로드 (파일이 있을 때만)
+# ---------------------------
 def load_titles_cached():
-    # 캐시 파일 있으면 바로 로드
     if os.path.exists("cache_titles.json"):
         with open("cache_titles.json", "r", encoding="utf-8") as f:
             return json.load(f)
-    
-    # 없으면 크롤링 후 저장
-    
-    from crolling import get_notice_titles
-    data = get_notice_titles()
-    with open("cache_titles.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    return data
-    
+    return []
+
+
 def load_contents_cached():
-    # 캐시 파일 있으면 바로 로드
     if os.path.exists("cache_contents.json"):
         with open("cache_contents.json", "r", encoding="utf-8") as f:
             return json.load(f)
-    
-    # 없으면 크롤링 후 저장
-    
-    from crolling import get_notice_contents 
-    data = get_notice_contents()
-    with open("cache_contents.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    return data
+    return []
+
 
 def load_course_titles_cached():
     if os.path.exists("cache_course_titles.json"):
         with open("cache_course_titles.json", "r", encoding="utf-8") as f:
             return json.load(f)
-
-    # 캐시 없으면 크롤링 후 생성
-    from crolling import get_course_titles
-    data = get_course_titles()
-    with open("cache_course_titles.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    return data
-
+    return []
