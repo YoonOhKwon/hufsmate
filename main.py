@@ -1,46 +1,19 @@
-from fastapi import FastAPI, Depends, HTTPException, Form
+from fastapi import FastAPI, Form, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from crolling import crawl_notices
-from ai_client import ai_summarize
 
-
-# ======================================
-# JWT 설정
-# ======================================
-SECRET_KEY = "YOUR_SECRET_KEY_CHANGE_THIS"
+SECRET_KEY = "CHANGE_THIS_SECRET"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
-def create_access_token(data: dict, expires_delta: int = None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=expires_delta or 60)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-def verify_token(token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-
-# ======================================
-# 사용자마다 공지 저장하는 메모리 공간
-# ======================================
-user_data = {}  # { "202503109": {titles: [...], contents: [...]} }
-
-
-# ======================================
-# FastAPI 초기화
-# ======================================
 app = FastAPI()
 
+# 프론트엔드 허용
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -48,58 +21,58 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 사용자 데이터 저장
+user_data = {}   # username → {titles:[], contents:[]}
 
-# ======================================
-# 🔐 로그인 API — 진짜 eclass 로그인
-# ======================================
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def verify_token(token: str = Depends(oauth2_scheme)):
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+# 로그인 API → 크롤링 실행
 @app.post("/login")
 def login(username: str = Form(...), password: str = Form(...)):
     try:
         titles, contents = crawl_notices(username, password)
     except Exception as e:
-        raise HTTPException(status_code=401, detail="로그인 실패 또는 크롤링 오류: " + str(e))
+        raise HTTPException(401, "로그인 실패 또는 크롤링 실패")
 
-    # 성공 → 사용자별 데이터 저장
+    # 서버 메모리에 저장
     user_data[username] = {
         "titles": titles,
         "contents": contents
     }
 
-    # JWT 발급
     token = create_access_token({"sub": username})
     return {"access_token": token, "token_type": "bearer"}
 
 
-# ======================================
-# 🔐 공지 조회
-# ======================================
+# 로그인한 사용자만 공지 불러오기 가능
 @app.get("/notices")
 def get_notices(user=Depends(verify_token)):
     username = user["sub"]
-
     if username not in user_data:
-        raise HTTPException(401, "로그인 정보 없음")
+        raise HTTPException(401, "로그인 후 이용하세요")
 
-    return {
-        "titles": user_data[username]["titles"],
-        "contents": user_data[username]["contents"]
-    }
+    return user_data[username]
 
 
-# ======================================
-# 🔐 AI 요약
-# ======================================
+# AI 요약도 same user만 가능
+from ai_client import ai_summarize
+
 @app.post("/summarize")
 def summarize_api(data: dict, user=Depends(verify_token)):
-    notice = data["text"]
-    prompt = data.get("prompt", "요약해줘")
-    result = ai_summarize(prompt, notice)
+    text = data["text"]
+    cmd = data.get("prompt", "")
+    result = ai_summarize(cmd, text)
     return {"result": result}
-
-
-# ======================================
-# 실행
-# ======================================
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
