@@ -1,10 +1,13 @@
 import os
 from openai import OpenAI
 
+API_KEY = os.getenv("DEEPSEEK_API_KEY")
+
 client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
+    api_key=API_KEY,
     base_url="https://api.deepseek.com/v1"
 )
+
 
 
 def ai_summarize(prompt : str, text: str) -> str:
@@ -31,3 +34,4 @@ def ai_summarize(prompt : str, text: str) -> str:
         ]
     )
     return response.choices[0].message.content
+
