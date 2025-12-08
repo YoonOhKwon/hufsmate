@@ -3,10 +3,13 @@ from ai_client import ai_summarize
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import json
+from crolling import crawl_notices
+
 
 titles = load_titles_cached()
 contents = load_contents_cached()
 app = FastAPI()
+user_data = {}
 
 @app.post("/refresh-cache")
 def refresh_cache():
@@ -34,12 +37,37 @@ app.add_middleware(
 )
         
    
+@app.post("/login")
+def login(username: str = Form(...), password: str = Form(...)):
+    # 아이디/비밀번호 실제 검증 → selenium으로 로그인 시도
+    try:
+        titles, contents = crawl_notices(username, password)
+    except:
+        raise HTTPException(status_code=401, detail="로그인 실패")
+
+    # 로그인 성공 → 서버 메모리에 저장
+    user_data[username] = {
+        "titles": titles,
+        "contents": contents
+    }
+
+    # JWT 발급
+    token = create_access_token({"sub": username})
+    return {"access_token": token, "token_type": "bearer"}
 
 @app.get("/notices")
-def get_notices():
-    titles = load_titles_cached()
-    contents = load_contents_cached()
-    return {"titles": titles, "contents": contents}
+def get_notices(user=Depends(verify_token)):
+    username = user["sub"]
+
+    if username not in user_data:
+        raise HTTPException(401, "로그인 정보가 없습니다")
+
+    return {
+        "titles": user_data[username]["titles"],
+        "contents": user_data[username]["contents"]
+    }
+
+
 
 @app.post("/summarize")
 def summarize_api(data: dict):
