@@ -10,8 +10,8 @@ client = OpenAI(
 
 def ai_summarize(prompt: str, text: str) -> str:
     """
-    prompt: 추가 조건(예: '정답만', '단계별로', '짧게' 등)
-    text: 사용자가 낸 문제 본문
+    prompt: 사용자가 입력한 문제/질문 (이것만 사용)
+    text: (공지 본문 등) 무시됨
     """
     if not API_KEY:
         raise RuntimeError("DEEPSEEK_API_KEY 환경 변수가 설정되어 있지 않습니다.")
@@ -29,7 +29,8 @@ def ai_summarize(prompt: str, text: str) -> str:
         "불필요한 인사말/자기소개는 금지한다.\n"
     )
 
-    user_content = f"추가 조건: {prompt}\n\n문제:\n{text}"
+    # ✅ 공지본문(text) 무시하고 prompt만 보냄
+    user_content = prompt
 
     response = client.chat.completions.create(
         model="deepseek-chat",
