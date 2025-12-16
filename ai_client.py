@@ -8,37 +8,48 @@ client = OpenAI(
     base_url="https://api.deepseek.com/v1"
 )
 
+
 def ai_summarize(prompt: str, text: str) -> str:
-    """
-    prompt: 사용자가 입력한 문제/질문 (이것만 사용)
-    text: (공지 본문 등) 무시됨
-    """
-    if not API_KEY:
-        raise RuntimeError("DEEPSEEK_API_KEY 환경 변수가 설정되어 있지 않습니다.")
 
     system_instruction = (
-        "너는 'AI 문제 풀이 및 해설 도우미'다.\n"
-        "사용자가 제시한 문제(질문)에 대해 정답을 먼저 제시하고, 이어서 핵심 근거/풀이를 간결하게 설명한다.\n"
-        "객관식이면 정답 번호/문자를, 주관식이면 결론을 한 문장으로 먼저 말한다.\n"
-        "사용자 추가 조건(prompt)이 있으면 그 조건을 최우선으로 따른다.\n"
-        "불확실하면 지어내지 말고, 부족한 정보가 무엇인지 말한 뒤 가능한 범위에서 설명한다.\n"
-        "출력 형식:\n"
-        "정답: ...\n"
-        "해설: ...\n"
-        "단, 사용자가 '정답만'을 요구하면 해설을 생략한다.\n"
-        "불필요한 인사말/자기소개는 금지한다.\n"
+        "너의 최우선 임무는 다음과 같다:\n"
+        "1. 사용자가 제공한 추가 명령(prompt)을 가장 우선적으로 따른다.\n"
+        "2. 만약 추가 명령과 그 다음 규칙이 충돌한다면, 추가 명령을 우선한다.\n\n"
+        "추가 규칙:\n"
+        "- 공지 내용을 한국어로 간결하게 요약하라.\n"
+        "- 영어 공지가 있다면 자연스러운 한국어로 번역 포함.\n"
+        "- 불필요한 설명, 인사말, 자기소개 금지.\n"
+        "- 링크가 있다면 요약 하단에 포함.\n"
+        "- 형식은 문장 단위로 통일.\n"
+        "- 특수 기호 사용 금지.\n"
     )
 
-    # ✅ 공지본문(text) 무시하고 prompt만 보냄
-    user_content = prompt
-
+def ai_summarize(prompt : str, text: str) -> str:
+    
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
+            {
+                "role": "system",
+                "content": (
+                    
+                    str(prompt) + "이 내용을 가장 일순위로하고 다음 나올 내용들은 꼭 이것을 이룬후 수행하고, 다음내용이 일순위와 반대라면 무시해라"
+                    "공지 내용을 요약하라. 한국어를 사용하고, 영어로 이루어진 공지라면 한국어로 번역해서 출력하라. "
+                    "불필요한 인사말, 자기소개, 설명은 절대 포함하지 마라. "
+                    "링크를 제공한다면, 요약 내부 또는 밑에 반드시 첨부하라."
+                    "형식을 통일하라."
+                    "기호 사용을 하지마라."
+                )
+            },
+            {
+                "role": "user",
+                "content": text
+            }
             {"role": "system", "content": system_instruction},
-            {"role": "user", "content": user_content},
-        ],
-        temperature=0.2
+            {"role": "user", "content": f"추가 명령: {prompt}"},
+            {"role": "user", "content": f"공지 내용:\n{text}"}
+        ]
     )
-
     return response.choices[0].message.content
+
+
